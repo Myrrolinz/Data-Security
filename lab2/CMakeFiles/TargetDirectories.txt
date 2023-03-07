@@ -1,0 +1,3 @@
+/mnt/d/LessonProjects/DataSecurity/lab2/CMakeFiles/rebuild_cache.dir
+/mnt/d/LessonProjects/DataSecurity/lab2/CMakeFiles/edit_cache.dir
+/mnt/d/LessonProjects/DataSecurity/lab2/CMakeFiles/he.dir

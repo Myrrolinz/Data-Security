@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/he.dir/ckks_test.cpp.o  -o he  /usr/local/lib/libseal-4.1.a -pthread 
