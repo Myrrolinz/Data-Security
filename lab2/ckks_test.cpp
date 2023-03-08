@@ -25,9 +25,9 @@ EncryptionParameters parms(scheme_type::ckks);
 
 size_t poly_modulus_degree = 8192;
 parms.set_poly_modulus_degree(poly_modulus_degree);
-parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 60, 40, 40, 60 }));
+parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 50, 30, 30, 30, 50 }));
 //选用2^40进行编码
-double scale = pow(2.0, 40);
+double scale = pow(2.0, 30);
 
 //（2）用参数生成CKKS框架context 
 SEALContext context(parms);
@@ -90,49 +90,64 @@ SEALContext context_server(parms);
 
 // 计算 x^3+y*z
 	Ciphertext temp;
-	Ciphertext temp_x;
+	//Ciphertext temp_x;
 	Ciphertext result_c;
 // 计算x*x，密文相乘，要进行relinearize和rescaling操作 
 	evaluator.multiply(xc, xc, temp);
 	evaluator.relinearize_inplace(temp, relin_keys);
 	evaluator.rescale_to_next_inplace(temp);
-// 计算temp*x，x要先进行一次乘法和rescaling操作，目的是使得temp和x在相同的层
+// 计算x*1.0: x要先进行一次乘法和rescaling操作，目的是使得temp和x在相同的层
 	Plaintext wt;
 	encoder.encode(1.0, scale, wt);
-	evaluator.multiply_plain_inplace(temp_x, wt);
-	evaluator.rescale_to_next_inplace(temp_x);
+	evaluator.multiply_plain_inplace(xc, wt);	// x*1.0
+	evaluator.rescale_to_next_inplace(xc);
 // 计算temp*temp_x
-	evaluator.multiply(temp_x, temp, temp);
+	evaluator.multiply(xc, temp, temp);
 	evaluator.relinearize_inplace(temp, relin_keys);
 	evaluator.rescale_to_next_inplace(temp);
 
-// 计算y*z，密文相乘，要进行relinearize和rescaling操作 
-	Ciphertext temp1;
-	evaluator.multiply(yc, zc, temp1);
-	evaluator.relinearize_inplace(temp1, relin_keys);
-	evaluator.rescale_to_next_inplace(temp1);
+// 计算y*1.0，密文相乘，要进行relinearize和rescaling操作 
+	// Ciphertext temp_y;
+	// Ciphertext temp_z;
+	// evaluator.multiply(yc, zc, temp1);
+	// evaluator.relinearize_inplace(temp1, relin_keys);
+	// evaluator.rescale_to_next_inplace(temp1);
+	Plaintext wt1;
+	encoder.encode(1.0, scale, wt1);
+	evaluator.multiply_plain_inplace(yc, wt1);
+	evaluator.rescale_to_next_inplace(yc);
+// 计算z*1.0
+	Plaintext wt2;
+	encoder.encode(1.0, scale, wt2);
+	evaluator.multiply_plain_inplace(zc, wt2);
+	evaluator.rescale_to_next_inplace(zc);
+
+//y*z 执行乘法和rescaling操作：
+	Ciphertext temp_;
+	evaluator.multiply(zc,yc,temp_);
+	evaluator.relinearize_inplace(temp_, relin_keys);
+	evaluator.rescale_to_next_inplace(temp_);
 
 //此时，我们可以查看框架中不同数据的层级：
-cout << "    + Modulus chain index for zc: "
-<< context_server.get_context_data(temp1.parms_id())->chain_index() << endl; 
-cout << "    + Modulus chain index for temp(x*x): "
+cout << "    + Modulus chain index for y*z: "
+<< context_server.get_context_data(temp_.parms_id())->chain_index() << endl; 
+cout << "    + Modulus chain index for temp(x^3): "
 << context_server.get_context_data(temp.parms_id())->chain_index() << endl;
 cout << "    + Modulus chain index for wt: "
 << context_server.get_context_data(wt.parms_id())->chain_index() << endl;
 
-//y*z 执行乘法和rescaling操作：
-	Ciphertext temp_;
-	evaluator.multiply_plain_inplace(temp_, wt);
-	evaluator.rescale_to_next_inplace(temp_);
-	evaluator.multiply(temp1, temp_, temp1);
-	evaluator.rescale_to_next_inplace(temp1);
+	// evaluator.multiply_plain_inplace(temp_, wt);
+	// evaluator.rescale_to_next_inplace(temp_);
+	// evaluator.multiply(temp1, temp_, temp1);
+	// evaluator.relinearize_inplace(temp1, relin_keys);
+	// evaluator.rescale_to_next_inplace(temp1);
 
 //再次查看temp1的层级，可以发现temp1与temp层级变得相同
-cout << "    + Modulus chain index for zc after zc*wt and rescaling: "
-<< context_server.get_context_data(temp1.parms_id())->chain_index() << endl;
+cout << "    + Modulus chain index for yc*zc after both *1.0 and rescaling: "
+<< context_server.get_context_data(temp_.parms_id())->chain_index() << endl;
 
 //最后执行temp+temp1，得到结果
-	evaluator.add_inplace(temp, temp1);
+	evaluator.add_inplace(temp, temp_);
 	//evaluator.multiply_inplace(temp, zc);
 	evaluator.relinearize_inplace(temp,relin_keys);
 	evaluator.rescale_to_next(temp, result_c);
