@@ -7,6 +7,7 @@ using namespace std;
 int main(){
     //创建面包板
     protoboard<FieldT>pb=build_protoboard(NULL);
+    //生成约束
     const r1cs_constraint_system<FieldT>constraint_system=pb.get_constraint_system();
     //生成密钥对
     const r1cs_gg_ppzksnark_keypair<default_r1cs_gg_ppzksnark_pp>keypair=r1cs_gg_ppzksnark_generator<default_r1cs_gg_ppzksnark_pp>(constraint_system);

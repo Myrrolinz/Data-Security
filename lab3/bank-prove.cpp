@@ -16,7 +16,10 @@ int main(){
     f_pk>>bank_pk;
     f_pk.close();
     //生成证明
-    const r1cs_gg_ppzksnark_proof<default_r1cs_gg_ppzksnark_pp>proof=r1cs_gg_ppzksnark_prover<default_r1cs_gg_ppzksnark_pp>(bank_pk,pb.primary_input(),pb.auxiliary_input());
+    const r1cs_gg_ppzksnark_proof<default_r1cs_gg_ppzksnark_pp>
+        proof=r1cs_gg_ppzksnark_prover<default_r1cs_gg_ppzksnark_pp>
+        (bank_pk,pb.primary_input(),pb.auxiliary_input());
+        //primary_input()为公开输入，auxiliary_input()为隐私输入
     //将生成的证明保存到bank_proof.raw文件
     fstream pr("bank_proof.raw",ios_base::out);
     pr<<proof;
