@@ -9,4 +9,5 @@ for i in range(2,4):
         d_23.append(int(f.read())) #读取文本
 #加法重构获得 d
 d=ss_f.restructure_polynomial([2,3],d_23,2,p)
+d = d / 3 # 得到平均值
 print(f'得票结果为：{d}')
