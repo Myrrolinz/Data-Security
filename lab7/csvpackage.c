@@ -73,7 +73,7 @@ struct Animals * csv_parser(FILE *csv_in)
             sum+=1;
         i++;
     }
-    printf("Animals which carrots cost > 55 (original): %d\n",sum);
+    // printf("Animals which carrots cost > 55 (original): %d\n",sum);
     fclose(csv_in);
     return &read_in[0];
 }
